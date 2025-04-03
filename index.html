@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vote des Meilleurs Pianistes Classiques</title>
+    <title>Vote for the Best Classical Pianists</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
-        <h1>Les Meilleurs Pianistes Classiques de Tous les Temps</h1>
-        <p>Votez pour vos pianistes préférés selon leur technique et leur musicalité</p>
+        <h1>The Greatest Classical Pianists of All Time</h1>
+        <p>Vote for your favorite pianists based on their technique and musicality</p>
     </header>
     
     <main>
@@ -20,15 +20,15 @@
         
         <div class="controls">
             <div class="pianists-list">
-                <h2>Pianistes</h2>
+                <h2>Pianists</h2>
                 <ul id="pianistsList"></ul>
             </div>
             
             <div class="voting-form">
-                <h2>Ajouter ou Voter</h2>
+                <h2>Add or Vote</h2>
                 <form id="votingForm">
                     <div class="form-group">
-                        <label for="pianistName">Nom du Pianiste:</label>
+                        <label for="pianistName">Pianist Name:</label>
                         <input type="text" id="pianistName" required>
                     </div>
                     <div class="form-group">
@@ -37,18 +37,18 @@
                         <span id="techniqueValue">5</span>
                     </div>
                     <div class="form-group">
-                        <label for="musicalityRating">Musicalité (1-10):</label>
+                        <label for="musicalityRating">Musicality (1-10):</label>
                         <input type="range" id="musicalityRating" min="1" max="10" value="5" step="0.5">
                         <span id="musicalityValue">5</span>
                     </div>
-                    <button type="submit">Voter</button>
+                    <button type="submit">Vote</button>
                 </form>
             </div>
         </div>
     </main>
     
     <footer>
-        <p>© 2025 - Application de Vote pour Pianistes Classiques</p>
+        <p>© 2025 - Classical Pianists Voting Application</p>
     </footer>
     
     <script src="script.js"></script>
