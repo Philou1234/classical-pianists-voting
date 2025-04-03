@@ -1,13 +1,5 @@
-// Initial data with some famous pianists (reset all vote counts to 0)
-let pianists = [
-    { name: "Martha Argerich", technique: 18, musicality: 19, votes: 0 },
-    { name: "Vladimir Horowitz", technique: 19, musicality: 18, votes: 0 },
-    { name: "Glenn Gould", technique: 19, musicality: 17, votes: 0 },
-    { name: "Arthur Rubinstein", technique: 17, musicality: 19, votes: 0 },
-    { name: "Sviatoslav Richter", technique: 19, musicality: 18, votes: 0 },
-    { name: "Lang Lang", technique: 18, musicality: 15, votes: 0 },
-    { name: "Daniil Trifonov", technique: 19, musicality: 18, votes: 0 }
-];
+// Initial data with no pianists (empty array)
+let pianists = [];
 
 // User management
 let currentUser = null;
@@ -86,7 +78,10 @@ function initChart() {
                         }
                     },
                     min: 0,
-                    max: 20
+                    max: 20,
+                    ticks: {
+                        stepSize: 5
+                    }
                 },
                 y: {
                     title: {
@@ -97,7 +92,10 @@ function initChart() {
                         }
                     },
                     min: 0,
-                    max: 20
+                    max: 20,
+                    ticks: {
+                        stepSize: 5
+                    }
                 }
             },
             plugins: {
@@ -111,34 +109,6 @@ function initChart() {
                 },
                 legend: {
                     display: false
-                },
-                // Add this for displaying pianist names on the chart
-                pianistLabels: {
-                    id: 'pianistLabels',
-                    afterDatasetsDraw(chart) {
-                        const { ctx } = chart;
-                        ctx.save();
-                        
-                        // Font settings for the names
-                        ctx.font = '12px Arial';
-                        ctx.fillStyle = '#484848';
-                        ctx.textAlign = 'center';
-                        
-                        // Get points
-                        const points = chart.getDatasetMeta(0).data;
-                        const dataset = chart.data.datasets[0];
-                        
-                        // Loop through each point and add text
-                        points.forEach((point, index) => {
-                            const position = point.getCenterPoint();
-                            const name = dataset.data[index].name;
-                            
-                            // Draw name slightly above the point
-                            ctx.fillText(name, position.x, position.y - 15);
-                        });
-                        
-                        ctx.restore();
-                    }
                 }
             }
         },
@@ -149,7 +119,7 @@ function initChart() {
                 ctx.save();
                 
                 // Font settings for the names
-                ctx.font = '12px Arial';
+                ctx.font = 'bold 12px Arial';
                 ctx.fillStyle = '#484848';
                 ctx.textAlign = 'center';
                 
@@ -170,11 +140,34 @@ function initChart() {
             }
         }]
     });
+    
+    // If no data, show guidelines for the axes
+    if (pianists.length === 0) {
+        // Draw some reference points to show the scale
+        const emptyCtx = pianistChart.getContext('2d');
+        emptyCtx.font = '12px Arial';
+        emptyCtx.fillStyle = '#cccccc';
+        emptyCtx.textAlign = 'center';
+        
+        // Add a message in the middle of the chart
+        emptyCtx.font = 'bold 16px Arial';
+        emptyCtx.fillText('No pianists yet. Be the first to add one!', pianistChart.width / 2, pianistChart.height / 2);
+    }
 }
 
 // Update the pianists list
 function updatePianistsList() {
     pianistsList.innerHTML = '';
+    
+    if (pianists.length === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.textContent = 'No pianists have been added yet. Add the first one!';
+        emptyMessage.style.color = '#999';
+        emptyMessage.style.fontStyle = 'italic';
+        emptyMessage.style.padding = '1rem 0';
+        pianistsList.appendChild(emptyMessage);
+        return;
+    }
     
     // Sort pianists by number of votes (descending)
     const sortedPianists = [...pianists].sort((a, b) => b.votes - a.votes);
@@ -429,11 +422,26 @@ function loadData() {
     }
 }
 
+// Function to clear all data
+function clearAllData() {
+    localStorage.removeItem('pianists');
+    localStorage.removeItem('users');
+    pianists = [];
+    users = [];
+    currentUser = null;
+    initChart();
+    updatePianistsList();
+    updateAuthUI();
+}
+
 // Save data when the page is about to be closed
 window.addEventListener('beforeunload', saveData);
 
 // Load data and initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Clear all existing data when page loads (only for this update)
+    clearAllData();
+    
     loadData();
     initChart();
     updatePianistsList();
