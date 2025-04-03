@@ -37,6 +37,13 @@ header h1 {
     color: var(--primary-color);
 }
 
+.stats-bar {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
 main {
     max-width: 1200px;
     margin: 2rem auto;
@@ -99,6 +106,23 @@ li:last-child {
     border-bottom: none;
 }
 
+.login-required-message {
+    background-color: var(--light-gray);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-style: italic;
+    color: #888;
+    display: block;
+}
+
+.form-inputs-disabled .form-group {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -146,6 +170,11 @@ button {
 
 button:hover {
     background-color: var(--primary-dark);
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
 footer {
