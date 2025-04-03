@@ -14,30 +14,6 @@
     </header>
     
     <main>
-        <div id="user-authentication">
-            <div id="login-section" class="login-container">
-                <h2>User Authentication</h2>
-                <div id="user-status" class="user-status">
-                    Not logged in. Please log in to vote.
-                </div>
-                <form id="authForm">
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" required>
-                    </div>
-                    <div class="form-group" id="name-field" style="display: none;">
-                        <label for="username">Your Name:</label>
-                        <input type="text" id="username" required>
-                    </div>
-                    <button type="submit" id="authButton">Login</button>
-                </form>
-                <div class="login-toggle">
-                    <span id="toggle-text">Don't have an account?</span> 
-                    <a id="toggle-auth">Sign up</a>
-                </div>
-            </div>
-        </div>
-
         <div class="chart-container">
             <canvas id="pianistChart"></canvas>
         </div>
@@ -67,6 +43,30 @@
                     </div>
                     <button type="submit" id="voteButton" disabled>Vote</button>
                 </form>
+            </div>
+        </div>
+        
+        <div id="user-authentication">
+            <div id="login-section" class="login-container">
+                <h2>User Authentication</h2>
+                <div id="user-status" class="user-status">
+                    Not logged in. Please log in to vote.
+                </div>
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group" id="name-field" style="display: none;">
+                        <label for="username">Your Name:</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <button type="submit" id="authButton">Login</button>
+                </form>
+                <div class="login-toggle">
+                    <span id="toggle-text">Don't have an account?</span> 
+                    <a id="toggle-auth">Sign up</a>
+                </div>
             </div>
         </div>
     </main>
