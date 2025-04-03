@@ -1,13 +1,17 @@
-// Initial data with some famous pianists
+// Initial data with some famous pianists (reset all vote counts to 0)
 let pianists = [
-    { name: "Martha Argerich", technique: 10, musicality: 9, votes: 1 },
-    { name: "Vladimir Horowitz", technique: 9.5, musicality: 9, votes: 1 },
-    { name: "Glenn Gould", technique: 9, musicality: 8.5, votes: 1 },
-    { name: "Arthur Rubinstein", technique: 8.5, musicality: 9.5, votes: 1 },
-    { name: "Sviatoslav Richter", technique: 9.5, musicality: 9, votes: 1 },
-    { name: "Lang Lang", technique: 9, musicality: 7.5, votes: 1 },
-    { name: "Daniil Trifonov", technique: 9.5, musicality: 9, votes: 1 }
+    { name: "Martha Argerich", technique: 18, musicality: 19, votes: 0 },
+    { name: "Vladimir Horowitz", technique: 19, musicality: 18, votes: 0 },
+    { name: "Glenn Gould", technique: 19, musicality: 17, votes: 0 },
+    { name: "Arthur Rubinstein", technique: 17, musicality: 19, votes: 0 },
+    { name: "Sviatoslav Richter", technique: 19, musicality: 18, votes: 0 },
+    { name: "Lang Lang", technique: 18, musicality: 15, votes: 0 },
+    { name: "Daniil Trifonov", technique: 19, musicality: 18, votes: 0 }
 ];
+
+// User management
+let currentUser = null;
+let users = [];
 
 // DOM element references
 const pianistChart = document.getElementById('pianistChart');
@@ -18,8 +22,20 @@ const techniqueRating = document.getElementById('techniqueRating');
 const musicalityRating = document.getElementById('musicalityRating');
 const techniqueValue = document.getElementById('techniqueValue');
 const musicalityValue = document.getElementById('musicalityValue');
+const voteButton = document.getElementById('voteButton');
+const authForm = document.getElementById('authForm');
+const authButton = document.getElementById('authButton');
+const toggleAuth = document.getElementById('toggle-auth');
+const toggleText = document.getElementById('toggle-text');
+const emailInput = document.getElementById('email');
+const usernameInput = document.getElementById('username');
+const nameField = document.getElementById('name-field');
+const userStatus = document.getElementById('user-status');
 
-// Initialize the chart
+// Authentication state
+let isLoginMode = true;
+
+// Initialize chart
 let myChart;
 
 function initChart() {
@@ -41,19 +57,19 @@ function initChart() {
                     name: pianist.name,
                     votes: pianist.votes
                 })),
-                backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                borderColor: 'rgba(52, 152, 219, 1)',
+                backgroundColor: 'rgba(255, 56, 92, 0.7)',
+                borderColor: 'rgba(255, 56, 92, 1)',
                 borderWidth: 1,
                 pointRadius: function(context) {
                     const index = context.dataIndex;
                     const votes = context.dataset.data[index].votes;
                     // Point size based on the number of votes (min 5, max 15)
-                    return Math.min(Math.max(votes * 2, 5), 15);
+                    return Math.min(Math.max(votes + 5, 5), 15);
                 },
                 pointHoverRadius: function(context) {
                     const index = context.dataIndex;
                     const votes = context.dataset.data[index].votes;
-                    return Math.min(Math.max(votes * 2, 5), 15) + 2;
+                    return Math.min(Math.max(votes + 5, 5), 15) + 2;
                 }
             }]
         },
@@ -70,7 +86,7 @@ function initChart() {
                         }
                     },
                     min: 0,
-                    max: 10.5
+                    max: 20
                 },
                 y: {
                     title: {
@@ -81,7 +97,7 @@ function initChart() {
                         }
                     },
                     min: 0,
-                    max: 10.5
+                    max: 20
                 }
             },
             plugins: {
@@ -96,7 +112,37 @@ function initChart() {
                 legend: {
                     display: false
                 }
-            }
+            },
+            // Add this for displaying pianist names on the chart
+            plugins: [
+                {
+                    id: 'pianistLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        ctx.save();
+                        
+                        // Font settings for the names
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = '#484848';
+                        ctx.textAlign = 'center';
+                        
+                        // Get points
+                        const points = chart.getDatasetMeta(0).data;
+                        const dataset = chart.data.datasets[0];
+                        
+                        // Loop through each point and add text
+                        points.forEach((point, index) => {
+                            const position = point.getCenterPoint();
+                            const name = dataset.data[index].name;
+                            
+                            // Draw name slightly above the point
+                            ctx.fillText(name, position.x, position.y - 15);
+                        });
+                        
+                        ctx.restore();
+                    }
+                }
+            ]
         }
     });
 }
@@ -158,12 +204,26 @@ function updatePianistsList() {
 votingForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
+    // Check if user is logged in
+    if (!currentUser) {
+        alert('Please log in to vote.');
+        return;
+    }
+    
     const name = pianistNameInput.value.trim();
     const technique = parseFloat(techniqueRating.value);
     const musicality = parseFloat(musicalityRating.value);
     
     if (name) {
         const existingPianistIndex = pianists.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+        
+        // Check if user has already voted for this pianist
+        const existingVote = currentUser.votes && currentUser.votes.find(v => v.pianist.toLowerCase() === name.toLowerCase());
+        
+        if (existingVote) {
+            alert(`You have already voted for ${name}. One vote per pianist per user!`);
+            return;
+        }
         
         if (existingPianistIndex !== -1) {
             // Update values and add a vote for an existing pianist
@@ -178,6 +238,16 @@ votingForm.addEventListener('submit', function(e) {
                 musicality: parseFloat(newMusicality.toFixed(1)),
                 votes: newVotes
             };
+            
+            // Record the vote for this user
+            if (!currentUser.votes) currentUser.votes = [];
+            currentUser.votes.push({
+                pianist: name,
+                technique: technique,
+                musicality: musicality
+            });
+            
+            saveUsers();
         } else {
             // Add a new pianist
             pianists.push({
@@ -186,6 +256,16 @@ votingForm.addEventListener('submit', function(e) {
                 musicality,
                 votes: 1
             });
+            
+            // Record the vote for this user
+            if (!currentUser.votes) currentUser.votes = [];
+            currentUser.votes.push({
+                pianist: name,
+                technique: technique,
+                musicality: musicality
+            });
+            
+            saveUsers();
         }
         
         // Update the chart and list
@@ -194,8 +274,10 @@ votingForm.addEventListener('submit', function(e) {
         
         // Reset the form
         votingForm.reset();
-        techniqueValue.textContent = '5';
-        musicalityValue.textContent = '5';
+        techniqueValue.textContent = '10';
+        musicalityValue.textContent = '10';
+        
+        saveData();
     }
 });
 
@@ -208,9 +290,105 @@ musicalityRating.addEventListener('input', () => {
     musicalityValue.textContent = musicalityRating.value;
 });
 
+// Authentication toggle
+toggleAuth.addEventListener('click', () => {
+    isLoginMode = !isLoginMode;
+    
+    if (isLoginMode) {
+        nameField.style.display = 'none';
+        authButton.textContent = 'Login';
+        toggleText.textContent = "Don't have an account?";
+        toggleAuth.textContent = 'Sign up';
+    } else {
+        nameField.style.display = 'block';
+        authButton.textContent = 'Sign Up';
+        toggleText.textContent = 'Already have an account?';
+        toggleAuth.textContent = 'Login';
+    }
+});
+
+// Handle authentication form
+authForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const email = emailInput.value.trim();
+    
+    if (isLoginMode) {
+        // Login
+        const user = users.find(u => u.email === email);
+        
+        if (user) {
+            currentUser = user;
+            updateAuthUI();
+            enableVoting();
+        } else {
+            alert('User not found. Please sign up.');
+        }
+    } else {
+        // Sign up
+        const username = usernameInput.value.trim();
+        
+        if (!username) {
+            alert('Please enter your name.');
+            return;
+        }
+        
+        const existingUser = users.find(u => u.email === email);
+        
+        if (existingUser) {
+            alert('User with this email already exists. Please login.');
+            return;
+        }
+        
+        const newUser = {
+            email,
+            name: username,
+            votes: []
+        };
+        
+        users.push(newUser);
+        currentUser = newUser;
+        saveUsers();
+        updateAuthUI();
+        enableVoting();
+    }
+    
+    authForm.reset();
+});
+
+function updateAuthUI() {
+    if (currentUser) {
+        userStatus.innerHTML = `
+            Logged in as <strong>${currentUser.name}</strong> (${currentUser.email})
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        `;
+        
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            currentUser = null;
+            updateAuthUI();
+            disableVoting();
+        });
+    } else {
+        userStatus.innerHTML = 'Not logged in. Please log in to vote.';
+    }
+}
+
+function enableVoting() {
+    voteButton.disabled = false;
+}
+
+function disableVoting() {
+    voteButton.disabled = true;
+}
+
 // Function to save data to local storage
 function saveData() {
     localStorage.setItem('pianists', JSON.stringify(pianists));
+}
+
+// Function to save users to local storage
+function saveUsers() {
+    localStorage.setItem('users', JSON.stringify(users));
 }
 
 // Function to load data from local storage
@@ -218,6 +396,11 @@ function loadData() {
     const savedData = localStorage.getItem('pianists');
     if (savedData) {
         pianists = JSON.parse(savedData);
+    }
+    
+    const savedUsers = localStorage.getItem('users');
+    if (savedUsers) {
+        users = JSON.parse(savedUsers);
     }
 }
 
@@ -229,4 +412,5 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
     initChart();
     updatePianistsList();
+    updateAuthUI();
 });
