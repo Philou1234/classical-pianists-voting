@@ -9,6 +9,7 @@ let users = [];
 const pianistChart = document.getElementById('pianistChart');
 const pianistsList = document.getElementById('pianistsList');
 const votingForm = document.getElementById('votingForm');
+const loginRequiredMessage = document.getElementById('login-required-message');
 const pianistNameInput = document.getElementById('pianistName');
 const techniqueRating = document.getElementById('techniqueRating');
 const musicalityRating = document.getElementById('musicalityRating');
@@ -23,6 +24,7 @@ const emailInput = document.getElementById('email');
 const usernameInput = document.getElementById('username');
 const nameField = document.getElementById('name-field');
 const userStatus = document.getElementById('user-status');
+const userCount = document.getElementById('user-count');
 
 // Authentication state
 let isLoginMode = true;
@@ -218,6 +220,14 @@ function updatePianistsList() {
     });
 }
 
+// Update user count display
+function updateUserCountDisplay() {
+    // Count unique users who have voted at least once
+    const votedUsers = users.filter(user => user.votes && user.votes.length > 0).length;
+    const userText = votedUsers === 1 ? 'user has' : 'users have';
+    userCount.textContent = `${votedUsers} ${userText} voted`;
+}
+
 // Handle form submission
 votingForm.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -289,6 +299,7 @@ votingForm.addEventListener('submit', function(e) {
         // Update the chart and list
         initChart();
         updatePianistsList();
+        updateUserCountDisplay();
         
         // Reset the form
         votingForm.reset();
@@ -369,6 +380,7 @@ authForm.addEventListener('submit', (e) => {
         saveUsers();
         updateAuthUI();
         enableVoting();
+        updateUserCountDisplay();
     }
     
     authForm.reset();
@@ -386,17 +398,27 @@ function updateAuthUI() {
             updateAuthUI();
             disableVoting();
         });
+        
+        // Hide login message
+        loginRequiredMessage.style.display = 'none';
     } else {
         userStatus.innerHTML = 'Not logged in. Please log in to vote.';
+        
+        // Show login message
+        loginRequiredMessage.style.display = 'block';
     }
 }
 
 function enableVoting() {
     voteButton.disabled = false;
+    // Remove the form-inputs-disabled class if it exists
+    votingForm.classList.remove('form-inputs-disabled');
 }
 
 function disableVoting() {
     voteButton.disabled = true;
+    // Add the form-inputs-disabled class
+    votingForm.classList.add('form-inputs-disabled');
 }
 
 // Function to save data to local storage
@@ -432,6 +454,7 @@ function clearAllData() {
     initChart();
     updatePianistsList();
     updateAuthUI();
+    updateUserCountDisplay();
 }
 
 // Save data when the page is about to be closed
@@ -446,4 +469,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initChart();
     updatePianistsList();
     updateAuthUI();
+    updateUserCountDisplay();
+    
+    // Initial user interface state - disable form inputs until login
+    disableVoting();
 });
