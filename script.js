@@ -42,7 +42,8 @@ function initChart() {
         myChart.destroy();
     }
     
-    myChart = new Chart(ctx, {
+    // Create the chart configuration
+    const chartConfig = {
         type: 'scatter',
         data: {
             datasets: [{
@@ -56,17 +57,8 @@ function initChart() {
                 backgroundColor: 'rgba(255, 56, 92, 0.7)',
                 borderColor: 'rgba(255, 56, 92, 1)',
                 borderWidth: 1,
-                pointRadius: function(context) {
-                    const index = context.dataIndex;
-                    const votes = context.dataset.data[index].votes;
-                    // Point size based on the number of votes (min 5, max 15)
-                    return Math.min(Math.max(votes + 5, 5), 15);
-                },
-                pointHoverRadius: function(context) {
-                    const index = context.dataIndex;
-                    const votes = context.dataset.data[index].votes;
-                    return Math.min(Math.max(votes + 5, 5), 15) + 2;
-                }
+                pointRadius: 8,
+                pointHoverRadius: 10
             }]
         },
         options: {
@@ -118,58 +110,40 @@ function initChart() {
         },
         plugins: [{
             id: 'pianistLabels',
-            afterDatasetsDraw(chart) {
-                if (!chart || !chart.ctx) return;
-                
-                const { ctx } = chart;
+            afterDraw(chart, args, options) {
+                const { ctx, chartArea, scales } = chart;
                 ctx.save();
                 
-                // Font settings for the names
                 ctx.font = 'bold 12px Arial';
                 ctx.fillStyle = '#484848';
                 ctx.textAlign = 'center';
                 
-                // Get points
-                if (!chart.getDatasetMeta || !chart.data) return;
-                
-                const points = chart.getDatasetMeta(0).data;
-                const dataset = chart.data.datasets[0];
-                
-                if (!points || !dataset || !dataset.data) return;
-                
-                // Loop through each point and add text
-                points.forEach((point, index) => {
-                    if (!point || !point.getCenterPoint) return;
-                    
-                    const position = point.getCenterPoint();
-                    const name = dataset.data[index].name;
-                    
-                    if (!position || !name) return;
-                    
-                    // Draw name slightly above the point
-                    ctx.fillText(name, position.x, position.y - 15);
+                // For each data point, draw the label
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    const meta = chart.getDatasetMeta(datasetIndex);
+                    dataset.data.forEach((data, index) => {
+                        const { x, y } = meta.data[index].getCenterPoint();
+                        ctx.fillText(data.name, x, y - 15);
+                    });
                 });
                 
                 ctx.restore();
             }
         }]
-    });
+    };
     
-    // If no data, show message in the chart area
+    // Create a new chart instance
+    myChart = new Chart(ctx, chartConfig);
+    
+    // If no data, show a message
     if (pianists.length === 0) {
-        // Wait for chart to render
-        setTimeout(() => {
-            const centerX = pianistChart.width / 2;
-            const centerY = pianistChart.height / 2;
-            
-            if (!centerX || !centerY) return;
-            
-            const ctx = pianistChart.getContext('2d');
-            ctx.font = 'bold 16px Arial';
-            ctx.fillStyle = '#cccccc';
-            ctx.textAlign = 'center';
-            ctx.fillText('No pianists yet. Be the first to add one!', centerX, centerY);
-        }, 100);
+        const ctx = pianistChart.getContext('2d');
+        ctx.save();
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = '#cccccc';
+        ctx.textAlign = 'center';
+        ctx.fillText('No pianists yet. Be the first to add one!', pianistChart.width / 2, pianistChart.height / 2);
+        ctx.restore();
     }
 }
 
@@ -574,11 +548,15 @@ function clearAllData() {
 // Load data and initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
-    initChart();
-    updatePianistsList();
-    updateAuthUI();
-    updateUserCountDisplay();
     
-    // Initial user interface state - disable form inputs until login
-    disableVoting();
+    // Wait for DOM to fully load
+    setTimeout(() => {
+        initChart();
+        updatePianistsList();
+        updateAuthUI();
+        updateUserCountDisplay();
+        
+        // Initial user interface state - disable form inputs until login
+        disableVoting();
+    }, 100);
 });
