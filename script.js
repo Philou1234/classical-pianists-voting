@@ -28,6 +28,8 @@ const userCount = document.getElementById('user-count');
 
 // Authentication state
 let isLoginMode = true;
+let isEditingVote = false;
+let currentEditingPianist = null;
 
 // Initialize chart
 let myChart;
@@ -207,10 +209,53 @@ function updatePianistsList() {
         pianistInfo.appendChild(ratingsDiv);
         
         li.appendChild(pianistInfo);
+        
+        // Add edit button if the user has voted for this pianist
+        if (currentUser && currentUser.votes && currentUser.votes.find(v => v.pianist.toLowerCase() === pianist.name.toLowerCase())) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-vote-btn';
+            editBtn.textContent = 'Edit Vote';
+            editBtn.style.marginTop = '0.5rem';
+            editBtn.style.width = 'auto';
+            editBtn.style.padding = '0.3rem 0.8rem';
+            editBtn.style.fontSize = '0.8rem';
+            
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent the li click event
+                
+                // Set form to edit mode
+                isEditingVote = true;
+                currentEditingPianist = pianist.name;
+                
+                // Find user's previous vote
+                const userVote = currentUser.votes.find(v => v.pianist.toLowerCase() === pianist.name.toLowerCase());
+                
+                // Pre-fill the form with the user's previous vote values
+                pianistNameInput.value = pianist.name;
+                techniqueRating.value = userVote.technique;
+                musicalityRating.value = userVote.musicality;
+                techniqueValue.textContent = userVote.technique;
+                musicalityValue.textContent = userVote.musicality;
+                
+                // Change button text to indicate editing
+                voteButton.textContent = 'Update Vote';
+                
+                // Scroll to form
+                votingForm.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            li.appendChild(editBtn);
+        }
+        
         pianistsList.appendChild(li);
         
         // Allow clicking on a pianist to pre-fill the form
         li.addEventListener('click', () => {
+            // Reset edit mode
+            isEditingVote = false;
+            currentEditingPianist = null;
+            voteButton.textContent = 'Vote';
+            
             pianistNameInput.value = pianist.name;
             techniqueRating.value = pianist.technique;
             musicalityRating.value = pianist.musicality;
@@ -245,68 +290,120 @@ votingForm.addEventListener('submit', function(e) {
     if (name) {
         const existingPianistIndex = pianists.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
         
-        // Check if user has already voted for this pianist
-        const existingVote = currentUser.votes && currentUser.votes.find(v => v.pianist.toLowerCase() === name.toLowerCase());
+        // Check if user has already voted for this pianist and isn't in edit mode
+        const existingVoteIndex = currentUser.votes ? 
+            currentUser.votes.findIndex(v => v.pianist.toLowerCase() === name.toLowerCase()) : -1;
         
-        if (existingVote) {
-            alert(`You have already voted for ${name}. One vote per pianist per user!`);
-            return;
-        }
+        const existingVote = existingVoteIndex !== -1;
         
-        if (existingPianistIndex !== -1) {
-            // Update values and add a vote for an existing pianist
-            const existingPianist = pianists[existingPianistIndex];
-            const newVotes = existingPianist.votes + 1;
-            const newTechnique = (existingPianist.technique * existingPianist.votes + technique) / newVotes;
-            const newMusicality = (existingPianist.musicality * existingPianist.votes + musicality) / newVotes;
-            
-            pianists[existingPianistIndex] = {
-                ...existingPianist,
-                technique: parseFloat(newTechnique.toFixed(1)),
-                musicality: parseFloat(newMusicality.toFixed(1)),
-                votes: newVotes
-            };
-            
-            // Record the vote for this user
-            if (!currentUser.votes) currentUser.votes = [];
-            currentUser.votes.push({
-                pianist: name,
-                technique: technique,
-                musicality: musicality
-            });
+        // If editing a vote or voting for the first time
+        if (isEditingVote || !existingVote) {
+            if (existingPianistIndex !== -1) {
+                // Get the existing pianist
+                const existingPianist = pianists[existingPianistIndex];
+                
+                if (existingVote && !isEditingVote) {
+                    alert(`You have already voted for ${name}. Use the Edit button to modify your vote.`);
+                    return;
+                }
+                
+                if (isEditingVote) {
+                    // We're editing an existing vote
+                    // First, remove the user's previous vote from the average
+                    const previousVote = currentUser.votes[existingVoteIndex];
+                    
+                    // Recalculate the total excluding this user's vote
+                    const newVotes = existingPianist.votes;
+                    
+                    // Remove previous vote from the total (if votes > 1)
+                    let newTechnique, newMusicality;
+                    
+                    if (newVotes > 1) {
+                        // Remove the previous vote from the average
+                        const totalTechniqueWithoutPreviousVote = (existingPianist.technique * newVotes) - previousVote.technique;
+                        const totalMusicalityWithoutPreviousVote = (existingPianist.musicality * newVotes) - previousVote.musicality;
+                        
+                        // Add the new vote
+                        newTechnique = (totalTechniqueWithoutPreviousVote + technique) / newVotes;
+                        newMusicality = (totalMusicalityWithoutPreviousVote + musicality) / newVotes;
+                    } else {
+                        // If this is the only vote, just use the new values
+                        newTechnique = technique;
+                        newMusicality = musicality;
+                    }
+                    
+                    // Update the pianist record
+                    pianists[existingPianistIndex] = {
+                        ...existingPianist,
+                        technique: parseFloat(newTechnique.toFixed(1)),
+                        musicality: parseFloat(newMusicality.toFixed(1))
+                    };
+                    
+                    // Update the user's vote record
+                    currentUser.votes[existingVoteIndex] = {
+                        pianist: name,
+                        technique: technique,
+                        musicality: musicality
+                    };
+                    
+                    // Reset the editing state
+                    isEditingVote = false;
+                    currentEditingPianist = null;
+                    voteButton.textContent = 'Vote';
+                } else {
+                    // It's a new vote for an existing pianist
+                    const newVotes = existingPianist.votes + 1;
+                    const newTechnique = (existingPianist.technique * existingPianist.votes + technique) / newVotes;
+                    const newMusicality = (existingPianist.musicality * existingPianist.votes + musicality) / newVotes;
+                    
+                    pianists[existingPianistIndex] = {
+                        ...existingPianist,
+                        technique: parseFloat(newTechnique.toFixed(1)),
+                        musicality: parseFloat(newMusicality.toFixed(1)),
+                        votes: newVotes
+                    };
+                    
+                    // Record the vote for this user
+                    if (!currentUser.votes) currentUser.votes = [];
+                    currentUser.votes.push({
+                        pianist: name,
+                        technique: technique,
+                        musicality: musicality
+                    });
+                }
+            } else {
+                // Add a new pianist
+                pianists.push({
+                    name,
+                    technique,
+                    musicality,
+                    votes: 1
+                });
+                
+                // Record the vote for this user
+                if (!currentUser.votes) currentUser.votes = [];
+                currentUser.votes.push({
+                    pianist: name,
+                    technique: technique,
+                    musicality: musicality
+                });
+            }
             
             saveUsers();
+            saveData();
+            
+            // Update the chart and list
+            initChart();
+            updatePianistsList();
+            updateUserCountDisplay();
+            
+            // Reset the form
+            votingForm.reset();
+            techniqueValue.textContent = '10';
+            musicalityValue.textContent = '10';
         } else {
-            // Add a new pianist
-            pianists.push({
-                name,
-                technique,
-                musicality,
-                votes: 1
-            });
-            
-            // Record the vote for this user
-            if (!currentUser.votes) currentUser.votes = [];
-            currentUser.votes.push({
-                pianist: name,
-                technique: technique,
-                musicality: musicality
-            });
-            
-            saveUsers();
+            alert(`You have already voted for ${name}. Use the Edit button to modify your vote.`);
         }
-        
-        // Update the chart and list
-        initChart();
-        updatePianistsList();
-        updateUserCountDisplay();
-        
-        // Reset the form
-        votingForm.reset();
-        techniqueValue.textContent = '10';
-        musicalityValue.textContent = '10';
-        
-        saveData();
     }
 });
 
@@ -384,6 +481,7 @@ authForm.addEventListener('submit', (e) => {
     }
     
     authForm.reset();
+    updatePianistsList(); // Refresh list to show edit buttons
 });
 
 function updateAuthUI() {
@@ -395,8 +493,12 @@ function updateAuthUI() {
         
         document.getElementById('logoutBtn').addEventListener('click', () => {
             currentUser = null;
+            isEditingVote = false;
+            currentEditingPianist = null;
+            voteButton.textContent = 'Vote';
             updateAuthUI();
             disableVoting();
+            updatePianistsList(); // Refresh to hide edit buttons
         });
         
         // Hide login message
@@ -451,6 +553,8 @@ function clearAllData() {
     pianists = [];
     users = [];
     currentUser = null;
+    isEditingVote = false;
+    currentEditingPianist = null;
     initChart();
     updatePianistsList();
     updateAuthUI();
