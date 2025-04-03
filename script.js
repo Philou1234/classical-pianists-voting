@@ -119,6 +119,8 @@ function initChart() {
         plugins: [{
             id: 'pianistLabels',
             afterDatasetsDraw(chart) {
+                if (!chart || !chart.ctx) return;
+                
                 const { ctx } = chart;
                 ctx.save();
                 
@@ -128,13 +130,21 @@ function initChart() {
                 ctx.textAlign = 'center';
                 
                 // Get points
+                if (!chart.getDatasetMeta || !chart.data) return;
+                
                 const points = chart.getDatasetMeta(0).data;
                 const dataset = chart.data.datasets[0];
                 
+                if (!points || !dataset || !dataset.data) return;
+                
                 // Loop through each point and add text
                 points.forEach((point, index) => {
+                    if (!point || !point.getCenterPoint) return;
+                    
                     const position = point.getCenterPoint();
                     const name = dataset.data[index].name;
+                    
+                    if (!position || !name) return;
                     
                     // Draw name slightly above the point
                     ctx.fillText(name, position.x, position.y - 15);
@@ -145,17 +155,21 @@ function initChart() {
         }]
     });
     
-    // If no data, show guidelines for the axes
+    // If no data, show message in the chart area
     if (pianists.length === 0) {
-        // Draw some reference points to show the scale
-        const emptyCtx = pianistChart.getContext('2d');
-        emptyCtx.font = '12px Arial';
-        emptyCtx.fillStyle = '#cccccc';
-        emptyCtx.textAlign = 'center';
-        
-        // Add a message in the middle of the chart
-        emptyCtx.font = 'bold 16px Arial';
-        emptyCtx.fillText('No pianists yet. Be the first to add one!', pianistChart.width / 2, pianistChart.height / 2);
+        // Wait for chart to render
+        setTimeout(() => {
+            const centerX = pianistChart.width / 2;
+            const centerY = pianistChart.height / 2;
+            
+            if (!centerX || !centerY) return;
+            
+            const ctx = pianistChart.getContext('2d');
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = '#cccccc';
+            ctx.textAlign = 'center';
+            ctx.fillText('No pianists yet. Be the first to add one!', centerX, centerY);
+        }, 100);
     }
 }
 
@@ -215,10 +229,6 @@ function updatePianistsList() {
             const editBtn = document.createElement('button');
             editBtn.className = 'edit-vote-btn';
             editBtn.textContent = 'Edit Vote';
-            editBtn.style.marginTop = '0.5rem';
-            editBtn.style.width = 'auto';
-            editBtn.style.padding = '0.3rem 0.8rem';
-            editBtn.style.fontSize = '0.8rem';
             
             editBtn.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent the li click event
@@ -561,14 +571,8 @@ function clearAllData() {
     updateUserCountDisplay();
 }
 
-// Save data when the page is about to be closed
-window.addEventListener('beforeunload', saveData);
-
 // Load data and initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Clear all existing data when page loads (only for this update)
-    clearAllData();
-    
     loadData();
     initChart();
     updatePianistsList();
