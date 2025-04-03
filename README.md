@@ -1,36 +1,36 @@
-# Vote des Meilleurs Pianistes Classiques
+# Vote for the Best Classical Pianists
 
-Une application web interactive permettant de voter pour les meilleurs pianistes classiques selon leur technique et leur musicalité.
+An interactive web application that allows users to vote for the best classical pianists based on their technique and musicality.
 
-## Fonctionnalités
+## Features
 
-- Visualisation des pianistes sur un graphique Technique vs Musicalité
-- Ajout de nouveaux pianistes
-- Vote pour les pianistes existants
-- Sauvegarde automatique des données dans le stockage local du navigateur
+- Visualize pianists on a Technique vs Musicality chart
+- Add new pianists
+- Vote for existing pianists
+- Automatic data saving in the browser's local storage
 
-## Comment utiliser
+## How to Use
 
-1. Accédez à l'application via GitHub Pages : [Lien vers l'application](https://philou1234.github.io/classical-pianists-voting/)
-2. Consultez le graphique pour voir les pianistes existants
-3. Cliquez sur un pianiste dans la liste pour charger ses valeurs dans le formulaire
-4. Ajustez les valeurs et soumettez pour voter
-5. Pour ajouter un nouveau pianiste, entrez simplement son nom et ses valeurs
+1. Access the application via GitHub Pages: [Application Link](https://philou1234.github.io/classical-pianists-voting/)
+2. Check the chart to see existing pianists
+3. Click on a pianist in the list to load their values into the form
+4. Adjust the values and submit to vote
+5. To add a new pianist, simply enter their name and values
 
-## Technologies utilisées
+## Technologies Used
 
 - HTML5
 - CSS3
 - JavaScript
-- Chart.js pour la visualisation
+- Chart.js for visualization
 
-## Développement local
+## Local Development
 
-Pour exécuter ce projet localement :
+To run this project locally:
 
-1. Clonez le dépôt
-2. Ouvrez `index.html` dans votre navigateur
+1. Clone the repository
+2. Open `index.html` in your browser
 
-## Licence
+## License
 
-Ce projet est sous licence MIT.
+This project is under the MIT License.
