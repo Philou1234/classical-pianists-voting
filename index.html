@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote des Meilleurs Pianistes Classiques</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Les Meilleurs Pianistes Classiques de Tous les Temps</h1>
+        <p>Votez pour vos pianistes préférés selon leur technique et leur musicalité</p>
+    </header>
+    
+    <main>
+        <div class="chart-container">
+            <canvas id="pianistChart"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="pianists-list">
+                <h2>Pianistes</h2>
+                <ul id="pianistsList"></ul>
+            </div>
+            
+            <div class="voting-form">
+                <h2>Ajouter ou Voter</h2>
+                <form id="votingForm">
+                    <div class="form-group">
+                        <label for="pianistName">Nom du Pianiste:</label>
+                        <input type="text" id="pianistName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="techniqueRating">Technique (1-10):</label>
+                        <input type="range" id="techniqueRating" min="1" max="10" value="5" step="0.5">
+                        <span id="techniqueValue">5</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="musicalityRating">Musicalité (1-10):</label>
+                        <input type="range" id="musicalityRating" min="1" max="10" value="5" step="0.5">
+                        <span id="musicalityValue">5</span>
+                    </div>
+                    <button type="submit">Voter</button>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>© 2025 - Application de Vote pour Pianistes Classiques</p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>
