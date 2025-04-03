@@ -111,11 +111,9 @@ function initChart() {
                 },
                 legend: {
                     display: false
-                }
-            },
-            // Add this for displaying pianist names on the chart
-            plugins: [
-                {
+                },
+                // Add this for displaying pianist names on the chart
+                pianistLabels: {
                     id: 'pianistLabels',
                     afterDatasetsDraw(chart) {
                         const { ctx } = chart;
@@ -142,8 +140,35 @@ function initChart() {
                         ctx.restore();
                     }
                 }
-            ]
-        }
+            }
+        },
+        plugins: [{
+            id: 'pianistLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                ctx.save();
+                
+                // Font settings for the names
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#484848';
+                ctx.textAlign = 'center';
+                
+                // Get points
+                const points = chart.getDatasetMeta(0).data;
+                const dataset = chart.data.datasets[0];
+                
+                // Loop through each point and add text
+                points.forEach((point, index) => {
+                    const position = point.getCenterPoint();
+                    const name = dataset.data[index].name;
+                    
+                    // Draw name slightly above the point
+                    ctx.fillText(name, position.x, position.y - 15);
+                });
+                
+                ctx.restore();
+            }
+        }]
     });
 }
 
