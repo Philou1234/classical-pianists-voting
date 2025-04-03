@@ -1,4 +1,4 @@
-// Données initiales avec quelques pianistes célèbres
+// Initial data with some famous pianists
 let pianists = [
     { name: "Martha Argerich", technique: 10, musicality: 9, votes: 1 },
     { name: "Vladimir Horowitz", technique: 9.5, musicality: 9, votes: 1 },
@@ -9,7 +9,7 @@ let pianists = [
     { name: "Daniil Trifonov", technique: 9.5, musicality: 9, votes: 1 }
 ];
 
-// Référence aux éléments du DOM
+// DOM element references
 const pianistChart = document.getElementById('pianistChart');
 const pianistsList = document.getElementById('pianistsList');
 const votingForm = document.getElementById('votingForm');
@@ -19,13 +19,13 @@ const musicalityRating = document.getElementById('musicalityRating');
 const techniqueValue = document.getElementById('techniqueValue');
 const musicalityValue = document.getElementById('musicalityValue');
 
-// Initialiser le graphique
+// Initialize the chart
 let myChart;
 
 function initChart() {
     const ctx = pianistChart.getContext('2d');
     
-    // Détruire le graphique existant s'il existe
+    // Destroy existing chart if it exists
     if (myChart) {
         myChart.destroy();
     }
@@ -34,7 +34,7 @@ function initChart() {
         type: 'scatter',
         data: {
             datasets: [{
-                label: 'Pianistes',
+                label: 'Pianists',
                 data: pianists.map(pianist => ({
                     x: pianist.technique,
                     y: pianist.musicality,
@@ -47,7 +47,7 @@ function initChart() {
                 pointRadius: function(context) {
                     const index = context.dataIndex;
                     const votes = context.dataset.data[index].votes;
-                    // Taille du point basée sur le nombre de votes (min 5, max 15)
+                    // Point size based on the number of votes (min 5, max 15)
                     return Math.min(Math.max(votes * 2, 5), 15);
                 },
                 pointHoverRadius: function(context) {
@@ -75,7 +75,7 @@ function initChart() {
                 y: {
                     title: {
                         display: true,
-                        text: 'Musicalité',
+                        text: 'Musicality',
                         font: {
                             size: 16
                         }
@@ -89,7 +89,7 @@ function initChart() {
                     callbacks: {
                         label: function(context) {
                             const point = context.raw;
-                            return `${point.name} - Technique: ${point.x}, Musicalité: ${point.y}, Votes: ${point.votes}`;
+                            return `${point.name} - Technique: ${point.x}, Musicality: ${point.y}, Votes: ${point.votes}`;
                         }
                     }
                 },
@@ -101,11 +101,11 @@ function initChart() {
     });
 }
 
-// Mettre à jour la liste des pianistes
+// Update the pianists list
 function updatePianistsList() {
     pianistsList.innerHTML = '';
     
-    // Trier les pianistes par nombre de votes (décroissant)
+    // Sort pianists by number of votes (descending)
     const sortedPianists = [...pianists].sort((a, b) => b.votes - a.votes);
     
     sortedPianists.forEach(pianist => {
@@ -143,7 +143,7 @@ function updatePianistsList() {
         li.appendChild(pianistInfo);
         pianistsList.appendChild(li);
         
-        // Permettre de cliquer sur un pianiste pour pré-remplir le formulaire
+        // Allow clicking on a pianist to pre-fill the form
         li.addEventListener('click', () => {
             pianistNameInput.value = pianist.name;
             techniqueRating.value = pianist.technique;
@@ -154,7 +154,7 @@ function updatePianistsList() {
     });
 }
 
-// Gérer la soumission du formulaire
+// Handle form submission
 votingForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -166,7 +166,7 @@ votingForm.addEventListener('submit', function(e) {
         const existingPianistIndex = pianists.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
         
         if (existingPianistIndex !== -1) {
-            // Mettre à jour les valeurs et ajouter un vote pour un pianiste existant
+            // Update values and add a vote for an existing pianist
             const existingPianist = pianists[existingPianistIndex];
             const newVotes = existingPianist.votes + 1;
             const newTechnique = (existingPianist.technique * existingPianist.votes + technique) / newVotes;
@@ -179,7 +179,7 @@ votingForm.addEventListener('submit', function(e) {
                 votes: newVotes
             };
         } else {
-            // Ajouter un nouveau pianiste
+            // Add a new pianist
             pianists.push({
                 name,
                 technique,
@@ -188,18 +188,18 @@ votingForm.addEventListener('submit', function(e) {
             });
         }
         
-        // Mettre à jour le graphique et la liste
+        // Update the chart and list
         initChart();
         updatePianistsList();
         
-        // Réinitialiser le formulaire
+        // Reset the form
         votingForm.reset();
         techniqueValue.textContent = '5';
         musicalityValue.textContent = '5';
     }
 });
 
-// Mettre à jour les valeurs affichées lors du déplacement des curseurs
+// Update displayed values when sliders move
 techniqueRating.addEventListener('input', () => {
     techniqueValue.textContent = techniqueRating.value;
 });
@@ -208,12 +208,12 @@ musicalityRating.addEventListener('input', () => {
     musicalityValue.textContent = musicalityRating.value;
 });
 
-// Fonction pour sauvegarder les données dans le stockage local
+// Function to save data to local storage
 function saveData() {
     localStorage.setItem('pianists', JSON.stringify(pianists));
 }
 
-// Fonction pour charger les données depuis le stockage local
+// Function to load data from local storage
 function loadData() {
     const savedData = localStorage.getItem('pianists');
     if (savedData) {
@@ -221,10 +221,10 @@ function loadData() {
     }
 }
 
-// Sauvegarder les données lorsque la page est sur le point d'être fermée
+// Save data when the page is about to be closed
 window.addEventListener('beforeunload', saveData);
 
-// Charger les données et initialiser l'application au chargement de la page
+// Load data and initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     initChart();
