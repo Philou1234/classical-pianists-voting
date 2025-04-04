@@ -114,55 +114,69 @@ function initChart() {
                 const { ctx, chartArea, scales } = chart;
                 ctx.save();
                 
-                // For each data point, draw the label and connecting line if needed
+                // Calculate safe boundaries within the chart area (with some padding)
+                const safeBounds = {
+                    left: chartArea.left + 10,
+                    right: chartArea.right - 10,
+                    top: chartArea.top + 20,
+                    bottom: chartArea.bottom - 10
+                };
+                
+                // Get the font size and calculate approximate text width multiplier
+                const fontSize = 12;
+                const fontWidthMultiplier = 0.6; // Approximate width per character in pixels
+                
+                // For each data point, draw the label and connecting line
                 chart.data.datasets.forEach((dataset, datasetIndex) => {
                     const meta = chart.getDatasetMeta(datasetIndex);
+                    
                     dataset.data.forEach((data, index) => {
+                        // Get point center position in pixels
                         const { x, y } = meta.data[index].getCenterPoint();
                         
-                        // Determine if the point is near the chart border
-                        const nearBorder = {
-                            top: y < 30,
-                            right: x > chartArea.right - 50,
-                            bottom: y > chartArea.bottom - 30,
-                            left: x < 50
-                        };
-                        
                         // Set text appearance
-                        ctx.font = 'bold 12px Arial';
+                        ctx.font = `bold ${fontSize}px Arial`;
                         ctx.fillStyle = '#484848';
+                        
+                        // Calculate approximate text width
+                        const textWidth = data.name.length * fontSize * fontWidthMultiplier;
+                        
+                        // Determine label position - stay within chart area
+                        let labelX, labelY;
+                        
+                        // Default position (center above the point)
                         ctx.textAlign = 'center';
+                        labelX = x;
                         
-                        // Calculate label position based on proximity to borders
-                        let labelX = x;
-                        let labelY = y - 15; // Default is above the point
-                        
-                        // If near top border, move label down
-                        if (nearBorder.top) {
-                            labelY = y + 25;
+                        // Label vertical position - ensure it's within bounds
+                        // For high y values (near top of chart), move label below point
+                        if (data.y > 15) {
+                            labelY = y + 20; // Below the point
+                        } else {
+                            labelY = y - 15; // Above the point
                         }
                         
-                        // If near right border and high technique value (>18)
-                        if (data.x > 18) {
-                            labelX = x - 25;
-                            ctx.textAlign = 'right';
+                        // Handle horizontal positioning
+                        // If label would go outside right edge
+                        if (x + textWidth / 2 > safeBounds.right) {
+                            labelX = safeBounds.right - textWidth / 2;
+                        }
+                        // If label would go outside left edge
+                        else if (x - textWidth / 2 < safeBounds.left) {
+                            labelX = safeBounds.left + textWidth / 2;
                         }
                         
-                        // If near left border and low technique value (<2)
-                        if (data.x < 2) {
-                            labelX = x + 25;
-                            ctx.textAlign = 'left';
-                        }
-                        
-                        // If near maximum musicality (>18)
-                        if (data.y > 18) {
-                            labelY = y - 25;
+                        // Keep label within vertical boundaries
+                        if (labelY < safeBounds.top) {
+                            labelY = safeBounds.top;
+                        } else if (labelY > safeBounds.bottom) {
+                            labelY = safeBounds.bottom;
                         }
                         
                         // Draw connecting line if label is moved significantly
-                        if (Math.abs(labelX - x) > 10 || Math.abs(labelY - y) > 10) {
+                        if (Math.abs(labelX - x) > 5 || Math.abs(labelY - y) > 5) {
                             ctx.beginPath();
-                            ctx.strokeStyle = 'rgba(150, 150, 150, 0.5)';
+                            ctx.strokeStyle = 'rgba(150, 150, 150, 0.7)';
                             ctx.setLineDash([2, 2]);
                             ctx.moveTo(x, y);
                             ctx.lineTo(labelX, labelY);
@@ -170,8 +184,22 @@ function initChart() {
                             ctx.setLineDash([]);
                         }
                         
+                        // Draw label background for better readability
+                        const padding = 3;
+                        const labelBgWidth = textWidth + padding * 2;
+                        const labelBgHeight = fontSize + padding * 2;
+                        
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                        ctx.fillRect(
+                            labelX - labelBgWidth / 2,
+                            labelY - labelBgHeight / 2,
+                            labelBgWidth,
+                            labelBgHeight
+                        );
+                        
                         // Draw the label
-                        ctx.fillText(data.name, labelX, labelY);
+                        ctx.fillStyle = '#484848';
+                        ctx.fillText(data.name, labelX, labelY + fontSize / 3); // Adjust for vertical centering
                     });
                 });
                 
