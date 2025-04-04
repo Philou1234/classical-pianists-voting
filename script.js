@@ -114,16 +114,64 @@ function initChart() {
                 const { ctx, chartArea, scales } = chart;
                 ctx.save();
                 
-                ctx.font = 'bold 12px Arial';
-                ctx.fillStyle = '#484848';
-                ctx.textAlign = 'center';
-                
-                // For each data point, draw the label
+                // For each data point, draw the label and connecting line if needed
                 chart.data.datasets.forEach((dataset, datasetIndex) => {
                     const meta = chart.getDatasetMeta(datasetIndex);
                     dataset.data.forEach((data, index) => {
                         const { x, y } = meta.data[index].getCenterPoint();
-                        ctx.fillText(data.name, x, y - 15);
+                        
+                        // Determine if the point is near the chart border
+                        const nearBorder = {
+                            top: y < 30,
+                            right: x > chartArea.right - 50,
+                            bottom: y > chartArea.bottom - 30,
+                            left: x < 50
+                        };
+                        
+                        // Set text appearance
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillStyle = '#484848';
+                        ctx.textAlign = 'center';
+                        
+                        // Calculate label position based on proximity to borders
+                        let labelX = x;
+                        let labelY = y - 15; // Default is above the point
+                        
+                        // If near top border, move label down
+                        if (nearBorder.top) {
+                            labelY = y + 25;
+                        }
+                        
+                        // If near right border and high technique value (>18)
+                        if (data.x > 18) {
+                            labelX = x - 25;
+                            ctx.textAlign = 'right';
+                        }
+                        
+                        // If near left border and low technique value (<2)
+                        if (data.x < 2) {
+                            labelX = x + 25;
+                            ctx.textAlign = 'left';
+                        }
+                        
+                        // If near maximum musicality (>18)
+                        if (data.y > 18) {
+                            labelY = y - 25;
+                        }
+                        
+                        // Draw connecting line if label is moved significantly
+                        if (Math.abs(labelX - x) > 10 || Math.abs(labelY - y) > 10) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = 'rgba(150, 150, 150, 0.5)';
+                            ctx.setLineDash([2, 2]);
+                            ctx.moveTo(x, y);
+                            ctx.lineTo(labelX, labelY);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                        }
+                        
+                        // Draw the label
+                        ctx.fillText(data.name, labelX, labelY);
                     });
                 });
                 
